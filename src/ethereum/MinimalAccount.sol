@@ -28,14 +28,24 @@ import {
 } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 contract MinimalAccount is IAccount, Ownable {
+    /*//////////////////////////////////////////////////////////////
+                                 ERRORS
+    //////////////////////////////////////////////////////////////*/
+
+    error MinimalAccount__NotFromEntryPoint();
+    error MinimalAccount__NotFromEntryPointOrOwner();
+    error MinimalAccount__CallFailed(bytes result);
+
+    /*//////////////////////////////////////////////////////////////
+                            STATE VARIABLES
+    //////////////////////////////////////////////////////////////*/
+
     mapping(address => uint256) public nonces;
     IEntryPoint private immutable i_entryPoint;
 
-    error MinimalAccount__NotFromEntryPoint();
-
-    constructor(address entryPoint) Ownable(msg.sender) {
-        i_entryPoint = IEntryPoint(entryPoint);
-    }
+    /*//////////////////////////////////////////////////////////////
+                               MODIFIERS
+    //////////////////////////////////////////////////////////////*/
 
     modifier requireFromEntryPoint() {
         if (msg.sender != address(i_entryPoint)) {
@@ -43,6 +53,23 @@ contract MinimalAccount is IAccount, Ownable {
         }
         _;
     }
+
+    modifier requireFromEntryPointOrOwner() {
+        if (msg.sender != address(i_entryPoint) && msg.sender != owner()) {
+            revert MinimalAccount__NotFromEntryPointOrOwner();
+        }
+        _;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                               FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    constructor(address entryPoint) Ownable(msg.sender) {
+        i_entryPoint = IEntryPoint(entryPoint);
+    }
+
+    receive() external payable {}
 
     function _validateSignature(
         PackedUserOperation calldata userOp,
@@ -70,6 +97,20 @@ contract MinimalAccount is IAccount, Ownable {
             return validationData;
         }
         return validationData;
+    }
+
+    function execute(
+        address dest,
+        uint256 value,
+        bytes calldata functiondata
+    ) external payable requireFromEntryPointOrOwner {
+        (bool success, bytes memory result) = dest.call{value: value}(
+            functiondata
+        );
+
+        if (!success) {
+            revert MinimalAccount__CallFailed(result);
+        }
     }
 
     /*//////////////////////////////////////////////////////////////
