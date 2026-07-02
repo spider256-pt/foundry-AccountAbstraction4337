@@ -2,13 +2,18 @@
 
 pragma solidity ^0.8.24;
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
+import {
+    EntryPoint
+} from "lib/account-abstraction/contracts/core/EntryPoint.sol";
 
 contract HelperConfig is Script {
     struct NetworkConfig {
         address entryPoint;
         address account;
     }
+
+    error HelperConfig__InvalidChainID();
 
     uint256 public constant ETH_SEPOLLIA_CHAIN_ID = 11155111;
     uint256 public constant ZKSYNC_SEPOLLIA_CHAIN_ID = 300;
@@ -53,8 +58,14 @@ contract HelperConfig is Script {
         }
 
         NetworkConfig memory sepoliaConfig = getEthSepiliaConfigs();
+
+        console.log("Deploying on Anvil");
+        vm.startBroadcast(FOUNDRY_DEFAULT_WALLET);
+        EntryPoint entrypoint = new EntryPoint();
+        vm.stopBroadcast();
+
         localNetworkConfig = NetworkConfig({
-            entryPoint: sepoliaConfig.entryPoint,
+            entryPoint: address(entrypoint),
             account: FOUNDRY_DEFAULT_WALLET
         });
         return localNetworkConfig;
@@ -69,7 +80,7 @@ contract HelperConfig is Script {
         if (networkConfigs[chainId].account != address(0)) {
             return networkConfigs[chainId];
         }
-        revert("HelperConfig__InvalidChainID");
+        revert HelperConfig__InvalidChainID();
     }
 
     function getConfig() public returns (NetworkConfig memory) {
