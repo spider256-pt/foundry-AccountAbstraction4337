@@ -9,10 +9,7 @@ import {HelperConfig} from "./HelperConfig.s.sol";
 contract DeployMinimal is Script {
     function deployrMinimalAccount()
         public
-        returns (
-            HelperConfig helperConfigInstance,
-            MinimalAccount minimalAccountContract
-        )
+        returns (HelperConfig helperConfigInstance, MinimalAccount minimalAccountContract)
     {
         HelperConfig helperConfig = new HelperConfig();
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
