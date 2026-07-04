@@ -19,23 +19,25 @@ import {
 using MessageHashUtils for bytes32;
 
 contract SendPackedOperation is Script {
-    HelperConfig helperConfig;
+    HelperConfig public helperConfig;
     function run() external {}
 
     function setUp() public {
         helperConfig = new HelperConfig();
     }
+
+    function setHelperConfig(HelperConfig _helperConfig) public {
+        helperConfig = _helperConfig;
+    }
     function generatedSingnatureOperation(
         bytes memory callData,
-        HelperConfig.NetworkConfig memory config
-    ) internal returns (PackedUserOperation memory) {
-        uint256 nonce = IEntryPoint(config.entryPoint).getNonce(
-            config.account,
-            0
-        );
+        HelperConfig.NetworkConfig memory config,
+        address minimalAccount
+    ) public returns (PackedUserOperation memory) {
+        uint256 nonce = vm.getNonce(minimalAccount) - 1;
         PackedUserOperation memory unsignedUserOp = _generateUnsignedUserOp(
             callData,
-            config.account,
+            minimalAccount,
             nonce
         );
 

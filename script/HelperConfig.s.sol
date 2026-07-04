@@ -19,7 +19,7 @@ contract HelperConfig is Script {
     uint256 public constant ZKSYNC_SEPOLLIA_CHAIN_ID = 300;
     uint256 public constant LOCAL_CHAIN_ID = 31337;
 
-    address constant FOUNDRY_DEFAULT_WALLET =
+    address constant ANVIL_LOCAL_ADDRESS =
         0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
     address public constant BURNER_WALLET =
@@ -60,13 +60,13 @@ contract HelperConfig is Script {
         NetworkConfig memory sepoliaConfig = getEthSepiliaConfigs();
 
         console.log("Deploying on Anvil");
-        vm.startBroadcast(FOUNDRY_DEFAULT_WALLET);
+        vm.startBroadcast(ANVIL_LOCAL_ADDRESS);
         EntryPoint entrypoint = new EntryPoint();
         vm.stopBroadcast();
 
         localNetworkConfig = NetworkConfig({
             entryPoint: address(entrypoint),
-            account: FOUNDRY_DEFAULT_WALLET
+            account: ANVIL_LOCAL_ADDRESS
         });
         return localNetworkConfig;
     }

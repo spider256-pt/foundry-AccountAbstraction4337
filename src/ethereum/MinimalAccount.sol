@@ -35,6 +35,7 @@ contract MinimalAccount is IAccount, Ownable {
     error MinimalAccount__NotFromEntryPoint();
     error MinimalAccount__NotFromEntryPointOrOwner();
     error MinimalAccount__CallFailed(bytes result);
+    error MinimalAccount__PayPreFundFailed();
 
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
@@ -78,7 +79,7 @@ contract MinimalAccount is IAccount, Ownable {
         bytes32 ethSignedMessage = MessageHashUtils.toEthSignedMessageHash(
             userOpHash
         );
-        address signer = ECDSA.recover(ethSignedMessage, userOp.signature);
+        address signer = ECDSA.recover(ethSignedMessage, userOp.signature); //Recovers the user key for verificatin purpose.
 
         if (signer == address(0) || signer != owner()) {
             return SIG_VALIDATION_FAILED; //If falied returns 1
@@ -93,6 +94,15 @@ contract MinimalAccount is IAccount, Ownable {
         uint256 missingAccountFunds
     ) external override requireFromEntryPoint returns (uint256 validationData) {
         validationData = _validateSignature(userOp, userOpHash);
+        if (missingAccountFunds != 0) {
+            (bool success, ) = payable(msg.sender).call{
+                value: missingAccountFunds,
+                gas: type(uint256).max
+            }("");
+            if (!success) {
+                revert MinimalAccount__PayPreFundFailed();
+            }
+        }
         if (validationData != SIG_VALIDATION_SUCCESS) {
             return validationData;
         }
