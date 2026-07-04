@@ -125,6 +125,7 @@ contract MinimalAccountTest is Test {
 
         uint256 validateUserFunds = 1e18;
         //Act
+        vm.deal(address(minimalAccount), 1e18);
         vm.prank(address(helperConfig.getConfig().entryPoint));
         uint256 validationData = minimalAccount.validateUserOp(
             packedUserOp,
