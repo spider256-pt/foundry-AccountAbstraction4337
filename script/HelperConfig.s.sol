@@ -3,7 +3,9 @@
 pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {EntryPoint} from "lib/account-abstraction/contracts/core/EntryPoint.sol";
+import {
+    EntryPoint
+} from "lib/account-abstraction/contracts/core/EntryPoint.sol";
 
 contract HelperConfig is Script {
     struct NetworkConfig {
@@ -17,9 +19,11 @@ contract HelperConfig is Script {
     uint256 public constant ZKSYNC_SEPOLLIA_CHAIN_ID = 300;
     uint256 public constant LOCAL_CHAIN_ID = 31337;
 
-    address constant ANVIL_LOCAL_ADDRESS = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    address constant ANVIL_LOCAL_ADDRESS =
+        0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
-    address public constant BURNER_WALLET = 0x5f265547093b1c70011b5036C77A5378a7D9c8eA;
+    address public constant BURNER_WALLET =
+        0x5f265547093b1c70011b5036C77A5378a7D9c8eA;
 
     NetworkConfig public localNetworkConfig;
     mapping(uint256 chainId => NetworkConfig) public networkConfigs;
@@ -30,14 +34,25 @@ contract HelperConfig is Script {
     }
 
     function getEthSepiliaConfigs() public pure returns (NetworkConfig memory) {
-        return NetworkConfig({entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, account: BURNER_WALLET});
+        return
+            NetworkConfig({
+                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032,
+                account: BURNER_WALLET
+            });
     }
 
-    function getZkSyncSepoliaConfigs() public pure returns (NetworkConfig memory) {
+    function getZkSyncSepoliaConfigs()
+        public
+        pure
+        returns (NetworkConfig memory)
+    {
         return NetworkConfig({entryPoint: address(0), account: BURNER_WALLET});
     }
 
-    function getOrCreateLocalAnvilEthConfigs() public returns (NetworkConfig memory) {
+    function getOrCreateLocalAnvilEthConfigs()
+        public
+        returns (NetworkConfig memory)
+    {
         if (localNetworkConfig.account != address(0)) {
             return localNetworkConfig;
         }
@@ -49,11 +64,16 @@ contract HelperConfig is Script {
         EntryPoint entrypoint = new EntryPoint();
         vm.stopBroadcast();
 
-        localNetworkConfig = NetworkConfig({entryPoint: address(entrypoint), account: ANVIL_LOCAL_ADDRESS});
+        localNetworkConfig = NetworkConfig({
+            entryPoint: address(entrypoint),
+            account: ANVIL_LOCAL_ADDRESS
+        });
         return localNetworkConfig;
     }
 
-    function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
+    function getConfigByChainId(
+        uint256 chainId
+    ) public returns (NetworkConfig memory) {
         if (chainId == LOCAL_CHAIN_ID) {
             return getOrCreateLocalAnvilEthConfigs();
         }
