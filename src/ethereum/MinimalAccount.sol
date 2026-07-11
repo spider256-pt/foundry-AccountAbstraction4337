@@ -2,19 +2,30 @@
 
 pragma solidity ^0.8.24;
 
-import {IAccount} from "lib/account-abstraction/contracts/interfaces/IAccount.sol";
+import {
+    IAccount
+} from "lib/account-abstraction/contracts/interfaces/IAccount.sol";
 
-import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {
+    IEntryPoint
+} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
-import {PackedUserOperation} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
+import {
+    PackedUserOperation
+} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 
-import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
+import {
+    SIG_VALIDATION_FAILED,
+    SIG_VALIDATION_SUCCESS
+} from "lib/account-abstraction/contracts/core/Helpers.sol";
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {
+    MessageHashUtils
+} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 contract MinimalAccount is IAccount, Ownable {
     /*//////////////////////////////////////////////////////////////
@@ -61,12 +72,13 @@ contract MinimalAccount is IAccount, Ownable {
 
     receive() external payable {}
 
-    function _validateSignature(PackedUserOperation calldata userOp, bytes32 userOpHash)
-        internal
-        view
-        returns (uint256 validation)
-    {
-        bytes32 ethSignedMessage = MessageHashUtils.toEthSignedMessageHash(userOpHash);
+    function _validateSignature(
+        PackedUserOperation calldata userOp,
+        bytes32 userOpHash
+    ) internal view returns (uint256 validation) {
+        bytes32 ethSignedMessage = MessageHashUtils.toEthSignedMessageHash(
+            userOpHash
+        );
         address signer = ECDSA.recover(ethSignedMessage, userOp.signature); //Recovers the user key for verificatin purpose.
 
         if (signer == address(0) || signer != owner()) {
@@ -76,15 +88,17 @@ contract MinimalAccount is IAccount, Ownable {
         return SIG_VALIDATION_SUCCESS; // If Passed returns 0
     }
 
-    function validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
-        external
-        override
-        requireFromEntryPoint
-        returns (uint256 validationData)
-    {
+    function validateUserOp(
+        PackedUserOperation calldata userOp,
+        bytes32 userOpHash,
+        uint256 missingAccountFunds
+    ) external override requireFromEntryPoint returns (uint256 validationData) {
         validationData = _validateSignature(userOp, userOpHash);
         if (missingAccountFunds != 0) {
-            (bool success,) = payable(msg.sender).call{value: missingAccountFunds, gas: type(uint256).max}("");
+            (bool success, ) = payable(msg.sender).call{
+                value: missingAccountFunds,
+                gas: type(uint256).max
+            }("");
             if (!success) {
                 revert MinimalAccount__PayPreFundFailed();
             }
@@ -95,12 +109,14 @@ contract MinimalAccount is IAccount, Ownable {
         return validationData;
     }
 
-    function execute(address dest, uint256 value, bytes calldata functiondata)
-        external
-        payable
-        requireFromEntryPointOrOwner
-    {
-        (bool success, bytes memory result) = dest.call{value: value}(functiondata);
+    function execute(
+        address dest,
+        uint256 value,
+        bytes calldata functiondata
+    ) external payable requireFromEntryPointOrOwner {
+        (bool success, bytes memory result) = dest.call{value: value}(
+            functiondata
+        );
 
         if (!success) {
             revert MinimalAccount__CallFailed(result);
